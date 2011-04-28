@@ -1,0 +1,15 @@
+*.pyc
+*.egg-info
+*~
+.coverage
+.ropeproject
+coverage.xml
+nosetests.xml
+bin
+build
+deps
+dist
+htmlcov
+include
+lib
+repos

@@ -50,7 +50,7 @@ class HubSyncController(object):
             os.chdir(repos_path)
             git_repo_url = '/'.join([request.config['git_base_url'],
                                      '%s.git' % repo_name])
-            subprocess.call(['hg', 'clone', git_repo_url])
+            subprocess.call([hgbin, 'clone', git_repo_url])
             # have to append the hg repo to the paths
             hgrc_path = os.path.join(repo_path, '.hg', 'hgrc')
             with open(hgrc_path, 'a') as hgrc_appender:
@@ -59,8 +59,8 @@ class HubSyncController(object):
                 hgrc_appender.write('\nmoz = %s' % hg_repo_url)
         os.chdir(repo_path)
         # should default to original github repo
-        subprocess.call(['hg' 'pull'])
-        subprocess.call(['hg' 'up'])
+        subprocess.call([hgbin, 'pull'])
+        subprocess.call([hgbin, 'up'])
         # explicitly push to the 'moz' path we set up
         subprocess.call(['hg' 'push', 'moz'])
         return 'repo cloned'

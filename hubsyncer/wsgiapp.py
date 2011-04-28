@@ -32,8 +32,7 @@ urls = [
     ('POST', '/', 'hubsync', 'sync'),
     ]
 
-controllers = {'hubsync': HubSyncController,
-               }
+controllers = {'hubsync': HubSyncController}
 
 
 class HubSyncerApp(SyncServerApp):

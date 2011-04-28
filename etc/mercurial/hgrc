@@ -1,3 +1,6 @@
 [extensions]
-hgext.bookmarks =
+bookmarks =
 hggit =
+
+[bookmarks]
+track.current = True

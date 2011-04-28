@@ -40,8 +40,10 @@ class HubSyncController(object):
         payload = json.loads(payload)
         repo_data = payload.get('repository', {})
         repo_name = pipes.quote(repo_data.get('name'))
-        if not repo_name:
+        ref = payload.get('ref')
+        if not repo_name or not ref:
             raise HTTPBadRequest('Missing or malformed payload')
+        branchname = pipes.quote(ref.split('/')[-1])
         repos_path = request.config['repos_path']
         repo_path = os.path.join(repos_path, repo_name)
         hgbin = os.path.join(request.config['bin'], 'hg')
@@ -62,5 +64,5 @@ class HubSyncController(object):
         subprocess.call([hgbin, 'pull'])
         subprocess.call([hgbin, 'up'])
         # explicitly push to the 'moz' path we set up
-        subprocess.call([hgbin, 'push', 'moz'])
+        subprocess.call([hgbin, 'push', '-B', branchname, 'moz'])
         return 'repo cloned'

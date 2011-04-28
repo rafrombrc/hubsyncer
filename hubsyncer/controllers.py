@@ -62,5 +62,5 @@ class HubSyncController(object):
         subprocess.call([hgbin, 'pull'])
         subprocess.call([hgbin, 'up'])
         # explicitly push to the 'moz' path we set up
-        subprocess.call(['hg' 'push', 'moz'])
+        subprocess.call([hgbin, 'push', 'moz'])
         return 'repo cloned'

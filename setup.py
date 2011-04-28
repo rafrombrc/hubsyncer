@@ -40,6 +40,8 @@ setup(
         "services",
         "nose",
         "coverage",
+        "mercurial",
+        "hg-git",
     ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,

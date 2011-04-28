@@ -44,6 +44,7 @@ class HubSyncController(object):
             raise HTTPBadRequest('Missing or malformed payload')
         repos_path = request.config['repos_path']
         repo_path = os.path.join(repos_path, repo_name)
+        hgbin = os.path.join(request.config['bin'], 'hg')
         if not os.path.isdir(repo_path):
             # have to clone the repo
             os.chdir(repos_path)

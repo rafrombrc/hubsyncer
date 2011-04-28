@@ -1,4 +1,4 @@
 A simple micro-app that accepts post-receive POST requests from github and then
-mirrors the specified repository to a mercurial repository elsewhere using hg-git.
-Please see http://help.github.com/post-receive-hooks/ for more information about
-the use of github post-receive hooks.
+mirrors the specified repository to a mercurial repository elsewhere using
+hg-git.  Please see http://help.github.com/post-receive-hooks/ for more
+information about the use of github post-receive hooks.

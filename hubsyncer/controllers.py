@@ -48,9 +48,11 @@ class HubSyncController(object):
         if not os.path.exists(repos_path):
             os.mkdir(repos_path)
 
-    def sync(self, request):
-        payload = request.POST.get('payload', '{}')
-        payload = json.loads(payload)
+    def _do_sync(self, request, payload_json):
+        """
+        The actual meat of the sync work happens here.
+        """
+        payload = json.loads(payload_json)
         repo_data = payload.get('repository', {})
         repo_name = pipes.quote(repo_data.get('name'))
         ref = payload.get('ref')
@@ -84,3 +86,10 @@ class HubSyncController(object):
         if subprocess.call([hgbin, 'push', '-B', branchname, 'moz']):
             return abort(payload_json)
         return 'repo cloned'
+
+    def sync(self, request):
+        """
+        Perform a sync from github to destination mercurial repo.
+        """
+        payload_json = request.POST.get('payload', '{}')
+        return self._do_sync(request, payload_json)

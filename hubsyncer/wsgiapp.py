@@ -30,6 +30,7 @@ from services.baseapp import set_app, SyncServerApp
 
 urls = [
     ('POST', '/', 'hubsync', 'sync'),
+    ('POST', '/catchup', 'hubsync', 'catchup'),
     ]
 
 controllers = {'hubsync': HubSyncController}

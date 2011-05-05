@@ -93,3 +93,11 @@ class HubSyncController(object):
         """
         payload_json = request.POST.get('payload', '{}')
         return self._do_sync(request, payload_json)
+
+    def catchup(self, request):
+        """
+        Read in all of the entries from the 'catchup' file and perform the
+        corresponding syncs.
+        """
+        with open(PAYLOAD_QUEUE_FILE_PATH) as payload_file:
+            pass

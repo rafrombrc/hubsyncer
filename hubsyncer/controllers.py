@@ -21,11 +21,15 @@
 #   Rob Miller (rmiller@mozilla.com)
 #
 # ***** END LICENSE BLOCK *****
+from pkg_resources import Requirement, resource_filename
 from webob.exc import HTTPBadRequest
 import json
 import os.path
 import pipes
 import subprocess
+
+hubsyncer_egg = Requirement.parse('hubsyncer')
+PLAYBACK_FILE_PATH = resource_filename(hubsyncer_egg, 'var/payloads.json')
 
 
 class HubSyncController(object):
@@ -34,6 +38,11 @@ class HubSyncController(object):
         repos_path = self.app.config['repos_path']
         if not os.path.exists(repos_path):
             os.mkdir(repos_path)
+
+    def abort(self, payload_json):
+        with open(PLAYBACK_FILE_PATH, 'a') as playback_appender:
+            playback_appender.write('\n\n%s\n\n' % payload_json)
+        return "sync aborted!"
 
     def _do_sync(self, request, payload_json):
         payload = json.loads(payload_json)
@@ -51,7 +60,9 @@ class HubSyncController(object):
             os.chdir(repos_path)
             git_repo_url = '/'.join([request.config['git_base_url'],
                                      '%s.git' % repo_name])
-            subprocess.call([hgbin, 'clone', git_repo_url])
+            # nonzero return code == failure
+            if subprocess.call([hgbin, 'clone', git_repo_url]):
+                return self.abort(payload_json)
             # have to append the hg repo to the paths
             hgrc_path = os.path.join(repo_path, '.hg', 'hgrc')
             with open(hgrc_path, 'a') as hgrc_appender:
@@ -60,10 +71,11 @@ class HubSyncController(object):
                 hgrc_appender.write('\nmoz = %s' % hg_repo_url)
         os.chdir(repo_path)
         # should default to original github repo
-        subprocess.call([hgbin, 'pull'])
-        subprocess.call([hgbin, 'up'])
+        if subprocess.call([hgbin, 'pull']) or subprocess.call([hgbin, 'up']):
+            return self.abort(payload_json)
         # explicitly push to the 'moz' path we set up
-        subprocess.call([hgbin, 'push', '-B', branchname, 'moz'])
+        if subprocess.call([hgbin, 'push', '-B', branchname, 'moz']):
+            return self.abort(payload_json)
         return 'repo cloned'
 
     def sync(self, request):

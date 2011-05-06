@@ -26,7 +26,10 @@
 Application entry point.
 """
 from hubsyncer.controllers import HubSyncController
+from hubsyncer.controllers import hubsyncer_egg
+from pkg_resources import resource_filename
 from services.baseapp import set_app, SyncServerApp
+import os.path
 
 urls = [
     ('POST', '/', 'hubsync', 'sync'),
@@ -41,6 +44,10 @@ class HubSyncerApp(SyncServerApp):
                  *args, **kwargs):
         if auth_class is not None:
             raise ValueError("A HubSyncerApp's ``auth_class`` must be None.")
+        # make sure var folder exists
+        var_path = resource_filename(hubsyncer_egg, 'var')
+        if not os.path.isdir(var_path):
+            os.mkdir(var_path)
         super(HubSyncerApp, self).__init__(urls, controllers, config,
                                            auth_class, *args, **kwargs)
 

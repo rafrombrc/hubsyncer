@@ -35,9 +35,8 @@ class HubSyncController(object):
         if not os.path.exists(repos_path):
             os.mkdir(repos_path)
 
-    def sync(self, request):
-        payload = request.POST.get('payload', '{}')
-        payload = json.loads(payload)
+    def _do_sync(self, request, payload_json):
+        payload = json.loads(payload_json)
         repo_data = payload.get('repository', {})
         repo_name = pipes.quote(repo_data.get('name'))
         ref = payload.get('ref')
@@ -66,3 +65,7 @@ class HubSyncController(object):
         # explicitly push to the 'moz' path we set up
         subprocess.call([hgbin, 'push', '-B', branchname, 'moz'])
         return 'repo cloned'
+
+    def sync(self, request):
+        payload_json = request.POST.get('payload', '{}')
+        return self._do_sync(request, payload_json)

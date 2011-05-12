@@ -29,16 +29,7 @@ import pipes
 import subprocess
 
 hubsyncer_egg = Requirement.parse('hubsyncer')
-PAYLOAD_QUEUE_FILE_PATH = resource_filename(hubsyncer_egg, 'var/payloads.json')
-
-
-def abort(payload_json):
-    """
-    Write the payload out to the 'catchup' file and return an error message.
-    """
-    with open(PAYLOAD_QUEUE_FILE_PATH, 'a') as payload_file_appender:
-        payload_file_appender.write('\n\n%s\n\n' % payload_json)
-    return 'repository sync aborted!'
+PLAYBACK_FILE_PATH = resource_filename(hubsyncer_egg, 'var/payloads.json')
 
 
 class HubSyncController(object):
@@ -47,6 +38,11 @@ class HubSyncController(object):
         repos_path = self.app.config['repos_path']
         if not os.path.exists(repos_path):
             os.mkdir(repos_path)
+
+    def abort(self, payload_json):
+        with open(PLAYBACK_FILE_PATH, 'a') as playback_appender:
+            playback_appender.write('\n\n%s\n\n' % payload_json)
+        return "sync aborted!"
 
     def _do_sync(self, request, payload_json):
         """
@@ -67,9 +63,9 @@ class HubSyncController(object):
             os.chdir(repos_path)
             git_repo_url = '/'.join([request.config['git_base_url'],
                                      '%s.git' % repo_name])
-            # any non-zero return code == failure
+            # nonzero return code == failure
             if subprocess.call([hgbin, 'clone', git_repo_url]):
-                return abort(payload_json)
+                return self.abort(payload_json)
             # have to append the hg repo to the paths
             hgrc_path = os.path.join(repo_path, '.hg', 'hgrc')
             with open(hgrc_path, 'a') as hgrc_appender:
@@ -78,13 +74,11 @@ class HubSyncController(object):
                 hgrc_appender.write('\nmoz = %s' % hg_repo_url)
         os.chdir(repo_path)
         # should default to original github repo
-        if subprocess.call([hgbin, 'pull']):
-            return abort(payload_json)
-        if subprocess.call([hgbin, 'up']):
-            return abort(payload_json)
+        if subprocess.call([hgbin, 'pull']) or subprocess.call([hgbin, 'up']):
+            return self.abort(payload_json)
         # explicitly push to the 'moz' path we set up
         if subprocess.call([hgbin, 'push', '-B', branchname, 'moz']):
-            return abort(payload_json)
+            return self.abort(payload_json)
         return 'repo cloned'
 
     def sync(self, request):
@@ -93,11 +87,3 @@ class HubSyncController(object):
         """
         payload_json = request.POST.get('payload', '{}')
         return self._do_sync(request, payload_json)
-
-    def catchup(self, request):
-        """
-        Read in all of the entries from the 'catchup' file and perform the
-        corresponding syncs.
-        """
-        with open(PAYLOAD_QUEUE_FILE_PATH) as payload_file:
-            pass
